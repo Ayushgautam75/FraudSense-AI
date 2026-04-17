@@ -23,7 +23,7 @@ An AI-powered financial fraud detection system built using Flask and Machine Lea
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/your-username/FraudSense-AI.git
+git clone https://github.com/Ayushgautam75/FraudSense-AI
 cd FraudSense-AI
 pip install -r requirements.txt
 python app.py
