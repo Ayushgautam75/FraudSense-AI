@@ -1,0 +1,56 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Dashboard - Financial Fraud Detection System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="text-muted">Welcome, {{ user }} ({{ role }})</p>
+    </div>
+    <div>
+      <a href="/history" class="btn btn-secondary me-2">Transaction History</a>
+      <form method="POST" action="/logout" class="d-inline">
+        <button type="submit" class="btn btn-danger">Logout</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h5>Total Transactions</h5>
+        <p class="display-6">20,150</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h5>Fraud Alerts</h5>
+        <p class="display-6 text-danger">250</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h5>Detection Today</h5>
+        <p class="display-6">1.2%</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card p-4">
+        <h4>Quick Actions</h4>
+        <p>Use the navigation or forms on the dashboard to make predictions.</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card p-4">
+        <h4>Today</h4>
+        <p>{{ current_date }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

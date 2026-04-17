@@ -1,0 +1,15 @@
+{
+  "feature_names": [
+    "TransactionAmount",
+    "AccountBalance",
+    "CustomerAge",
+    "TransactionDuration",
+    "LoginAttempts",
+    "channel_code"
+  ],
+  "channel_map": {
+    "ATM": 0,
+    "Branch": 1,
+    "Online": 2
+  }
+}

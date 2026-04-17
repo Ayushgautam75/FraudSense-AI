@@ -1,0 +1,41 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Login - BankGuard Fraud System{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-logo">🏦</div>
+      <div>
+        <h2>FraudSense AI</h2>
+        <p>Secure login for fraud analysts.</p>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/login" class="auth-form">
+      <label>
+        Username
+        <input type="text" name="user" placeholder="admin" required />
+      </label>
+      <label>
+        Password
+        <input type="password" name="pwd" placeholder="demo123" required />
+      </label>
+      <button type="submit" class="btn btn-primary">Sign In</button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Demo access: <strong>admin</strong> / <strong>demo123</strong></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

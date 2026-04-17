@@ -1,0 +1,758 @@
+﻿{% extends "base.html" %} {% block title %}Dashboard - Financial Fraud Detection
+System{% endblock %} {% block content %}
+<div class="dashboard-app">
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">🏦</div>
+      <div class="brand-copy">
+        <h2>FraudSense AI</h2>
+        <p>AI-Powered Financial Protection System</p>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <a href="#overview" class="nav-link active"
+        ><span class="nav-icon">🏠</span> Overview</a
+      >
+      <a href="#analytics" class="nav-link"
+        ><span class="nav-icon">📊</span> Analytics</a
+      >
+      <a href="#fraud" class="nav-link"
+        ><span class="nav-icon">🚨</span> Fraud Detection</a
+      >
+      <a href="#loan" class="nav-link"
+        ><span class="nav-icon">💳</span> Loan Prediction</a
+      >
+      <a href="#anomaly" class="nav-link"
+        ><span class="nav-icon">🔍</span> Anomaly Detection</a
+      >
+      <a href="#transactions" class="nav-link"
+        ><span class="nav-icon">📋</span> Transactions</a
+      >
+      <a href="/history" class="nav-link"
+        ><span class="nav-icon">🕘</span> History</a
+      >
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-profile-card">
+        <div class="user-avatar">{{ user[:1] | upper }}</div>
+        <div>
+          <strong>{{ user | capitalize }}</strong>
+          <small>{{ role }}</small>
+        </div>
+      </div>
+      <form action="/logout" method="POST">
+        <button type="submit" class="btn btn-outline-primary logout-wide">
+          Logout
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="dashboard-main">
+    <div class="topbar">
+      <div>
+        <h1>Bank Fraud Dashboard</h1>
+        <p class="subtitle">
+          A professional banking product view with live fraud monitoring.
+        </p>
+      </div>
+      <div class="topbar-actions">
+        <div class="search-box">
+          <span>🔍</span>
+          <input
+            type="search"
+            placeholder="Search transactions, users or locations"
+          />
+        </div>
+        <button class="icon-btn" title="Notifications">🔔</button>
+        <div class="profile-chip">
+          <span>{{ user | capitalize }}</span>
+          <small>{{ role }} Admin</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner-alert">
+      <span>⚠️</span>
+      {{ banner_message }}
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="toast-container">
+      {% for category, message in messages %}
+      <div
+        class="toast-message toast-{{ 'danger' if category == 'danger' else category }}"
+      >
+        <strong>Notification:</strong> {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <section id="overview" class="dashboard-section">
+      <div class="stats-grid">
+        <article class="stat-card stat-gradient-primary">
+          <div class="stat-top">
+            <span class="stat-icon">💰</span>
+            <small>Total Transactions</small>
+          </div>
+          <h2>{{ stats.total }}</h2>
+          <p class="stat-footer positive">
+            {{ total_change }}% ↑ from yesterday
+          </p>
+          <div class="stat-graph">
+            <canvas id="sparkTotal"></canvas>
+          </div>
+        </article>
+        <article class="stat-card stat-gradient-danger">
+          <div class="stat-top">
+            <span class="stat-icon">🚨</span>
+            <small>Fraud Alerts</small>
+          </div>
+          <h2>{{ fraud_total }}</h2>
+          <p class="stat-footer negative">
+            {{ fraud_change }}% ↑ from yesterday
+          </p>
+          <div class="stat-graph">
+            <canvas id="sparkFraud"></canvas>
+          </div>
+        </article>
+        <article class="stat-card stat-gradient-success">
+          <div class="stat-top">
+            <span class="stat-icon">✅</span>
+            <small>Safe Transactions</small>
+          </div>
+          <h2>{{ safe_total }}</h2>
+          <p class="stat-footer positive">{{ safe_rate }}% approval</p>
+          <div class="stat-graph">
+            <canvas id="sparkSafe"></canvas>
+          </div>
+        </article>
+        <article class="stat-card stat-gradient-info">
+          <div class="stat-top">
+            <span class="stat-icon">📈</span>
+            <small>Fraud Rate</small>
+          </div>
+          <h2>{{ fraud_rate }}%</h2>
+          <p class="stat-footer">Last 7 days</p>
+          <div class="stat-graph">
+            <canvas id="sparkRate"></canvas>
+          </div>
+        </article>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-panel">
+          <div class="panel-header">
+            <h3>Fraud Trend (Last 7 Days)</h3>
+          </div>
+          <canvas id="fraudLineChart"></canvas>
+        </div>
+        <div class="chart-panel compact-panel">
+          <div class="panel-header">
+            <h3>Fraud vs Legit</h3>
+          </div>
+          <canvas id="fraudPieChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="analytics" class="dashboard-section">
+      <div class="charts-grid advanced-charts">
+        <div class="chart-panel">
+          <div class="panel-header">
+            <h3>🚨 Fraud Over Time (Advanced)</h3>
+          </div>
+          <canvas id="fraudTimeChart" height="300"></canvas>
+        </div>
+        <div class="chart-panel">
+          <div class="panel-header">
+            <h3>📍 Location-Based Fraud</h3>
+          </div>
+          <canvas id="locationFraudChart" height="300"></canvas>
+        </div>
+        <div class="chart-panel">
+          <div class="panel-header">
+            <h3>👥 User Risk Distribution</h3>
+          </div>
+          <canvas id="riskDistributionChart" height="300"></canvas>
+        </div>
+        <div class="chart-panel">
+          <div class="panel-header">
+            <h3>⏰ Transaction Patterns</h3>
+          </div>
+          <canvas id="patternChart" height="300"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="fraud" class="dashboard-section split-grid">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h3>Fraud Detection Form</h3>
+          <p>Enter transaction details for instant fraud scoring.</p>
+        </div>
+        <form action="/predict" method="POST" class="dashboard-form">
+          <div class="form-row">
+            <label>
+              <span>Enter amount (₹)</span>
+              <input
+                name="amount"
+                type="number"
+                placeholder="₹ 12,500"
+                required
+              />
+            </label>
+            <label>
+              <span>Transaction time</span>
+              <input
+                name="time"
+                type="number"
+                min="0"
+                max="23"
+                placeholder="14"
+                required
+              />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              <span>Location</span>
+              <input name="location" placeholder="Enter city" required />
+            </label>
+            <label>
+              <span>Device</span>
+              <select name="device" required>
+                <option value="mobile">Mobile</option>
+                <option value="atm">ATM</option>
+                <option value="web">Web</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              <span>Transaction type</span>
+              <select name="trans_type" required>
+                <option value="online">Online</option>
+                <option value="transfer">Transfer</option>
+                <option value="purchase">Purchase</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">Check Fraud</button>
+        </form>
+
+        <div class="result-box">
+          <p class="result-title">Latest Model Result</p>
+          {% if last_transaction %}
+          <p><strong>{{ last_transaction.result }}</strong></p>
+          <p>
+            <strong
+              >Fraud Probability: {{ last_transaction.confidence | round(1)
+              }}%</strong
+            >
+          </p>
+          {% if last_transaction.details and
+          last_transaction.details.fraud_probability %}
+          <p>
+            <strong
+              >Risk Category: {{ last_transaction.details.risk_category
+              }}</strong
+            >
+          </p>
+          {% endif %} {% if last_reasons %}
+          <p><strong>AI Explanation:</strong></p>
+          <ul class="result-reasons">
+            {% for reason in last_reasons %}
+            <li>{{ reason }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p>Reason: Transaction pattern and model prediction.</p>
+          {% endif %} {% else %}
+          <p><strong>🚨 FRAUD DETECTED</strong></p>
+          <p>Fraud Probability: 92%</p>
+          <p>Risk Category: 🔴 HIGH RISK</p>
+          <p>
+            AI Explanation: Unusual location + high amount + night transaction
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <aside class="alert-summary-card">
+        <h3>Alert Center</h3>
+        <div class="alert-summary alert-critical">
+          <strong>High Fraud Exposure</strong>
+          <p>25 cases trending upward in Delhi region.</p>
+        </div>
+        <div class="alert-summary alert-warning">
+          <strong>Unusual Login</strong>
+          <p>Multiple ATM transfers from same account.</p>
+        </div>
+        <div class="alert-summary alert-success">
+          <strong>System Status</strong>
+          <p>Prediction engine healthy and responsive.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section id="loan" class="dashboard-section split-grid">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h3>Loan Default Prediction</h3>
+          <p>Estimate risk using applicant financial data.</p>
+        </div>
+        <form action="/loan" method="POST" class="dashboard-form">
+          <div class="form-row">
+            <label>
+              <span>Age</span>
+              <input
+                name="age"
+                type="number"
+                placeholder="Enter age"
+                required
+              />
+            </label>
+            <label>
+              <span>Income</span>
+              <input
+                name="income"
+                type="number"
+                placeholder="Annual income"
+                required
+              />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              <span>Loan Amount</span>
+              <input
+                name="loan"
+                type="number"
+                placeholder="Loan requested"
+                required
+              />
+            </label>
+            <label>
+              <span>Credit Score</span>
+              <input
+                name="credit"
+                type="number"
+                placeholder="Credit score"
+                required
+              />
+            </label>
+          </div>
+          <label>
+            <span>Years Employed</span>
+            <input
+              name="employment"
+              type="number"
+              placeholder="Employment history"
+            />
+          </label>
+          <button type="submit" class="btn btn-primary">Predict Loan</button>
+        </form>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-header">
+          <h3>Risk Score Calculator</h3>
+          <p>Assess customer risk using credit metrics.</p>
+        </div>
+        <form action="/risk" method="POST" class="dashboard-form">
+          <div class="form-row">
+            <label>
+              <span>Age</span>
+              <input
+                name="age"
+                type="number"
+                placeholder="Enter age"
+                required
+              />
+            </label>
+            <label>
+              <span>Income</span>
+              <input
+                name="income"
+                type="number"
+                placeholder="Monthly income"
+                required
+              />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              <span>Loan Amount</span>
+              <input
+                name="loan"
+                type="number"
+                placeholder="Existing loan"
+                required
+              />
+            </label>
+            <label>
+              <span>Credit Score</span>
+              <input
+                name="credit"
+                type="number"
+                placeholder="Credit score"
+                required
+              />
+            </label>
+          </div>
+          <button type="submit" class="btn btn-outline-secondary">
+            Calculate Risk
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section id="anomaly" class="dashboard-section split-grid">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h3>🚨 Anomaly Detection (Isolation Forest)</h3>
+          <p>Detect unusual spending patterns using advanced ML.</p>
+        </div>
+        <form action="/anomaly" method="POST" class="dashboard-form">
+          <div class="form-row">
+            <label>
+              <span>Transaction Amount (₹)</span>
+              <input
+                name="amount"
+                type="number"
+                placeholder="₹ 25,000"
+                required
+              />
+            </label>
+            <label>
+              <span>Monthly Frequency</span>
+              <input name="frequency" type="number" placeholder="15" required />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              <span>Average Amount</span>
+              <input
+                name="avg_amount"
+                type="number"
+                placeholder="₹ 5,000"
+                required
+              />
+            </label>
+            <label>
+              <span>Account Balance</span>
+              <input
+                name="balance"
+                type="number"
+                placeholder="₹ 50,000"
+                required
+              />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              <span>Customer Age</span>
+              <input name="age" type="number" placeholder="35" required />
+            </label>
+            <label>
+              <span>Location</span>
+              <input name="location" placeholder="City" required />
+            </label>
+          </div>
+          <button type="submit" class="btn btn-warning">Detect Anomaly</button>
+        </form>
+      </div>
+
+      <aside class="alert-summary-card">
+        <h3>AI-Powered Detection</h3>
+        <div class="alert-summary alert-warning">
+          <strong>Isolation Forest Active</strong>
+          <p>
+            Advanced unsupervised learning detects statistical outliers in
+            real-time.
+          </p>
+        </div>
+        <div class="alert-summary alert-info">
+          <strong>How it Works</strong>
+          <p>
+            Analyzes transaction patterns, amounts, and customer behavior to
+            identify anomalies.
+          </p>
+        </div>
+      </aside>
+    </section>
+
+    <section id="transactions" class="dashboard-section table-section">
+      <div class="section-header">
+        <div>
+          <h3>Recent Transactions</h3>
+          <p>Monitor the latest banking transactions with fraud status.</p>
+        </div>
+        <a href="/history" class="btn btn-outline-secondary">View all</a>
+      </div>
+      <div class="table-card">
+        <table class="transactions-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Amount</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tx in recent_transactions %}
+            <tr>
+              <td>{{ tx.user_id }}</td>
+              <td>₹{{ tx.amount | round(2) }}</td>
+              <td>{{ tx.location or 'Unknown' }}</td>
+              <td
+                class="status {% if 'Fraud' in tx.result %}danger{% elif 'Safe' in tx.result %}success{% elif 'Review' in tx.result or 'Anomaly' in tx.result %}warning{% else %}info{% endif %}"
+              >
+                {{ tx.result }}
+              </td>
+              <td>{{ tx.confidence | round(1) }}%</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 24px">
+                No recent transactions yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div
+  id="dashboard-data"
+  data-payload='{{ {
+  "line_labels": line_labels | default([]),
+  "fraud_trend": line_fraud | default([]),
+  "legit_trend": line_legit | default([]),
+  "spark_total": spark_total | default([]),
+  "spark_rate": spark_rate | default([]),
+  "pie_data": pie_data | default([0,0])
+} | tojson | safe }}'
+></div>
+
+<script>
+  const dashboardDataEl = document.getElementById("dashboard-data");
+  const chartData = dashboardDataEl
+    ? JSON.parse(dashboardDataEl.dataset.payload || "{}")
+    : {};
+  const lineLabels = chartData.line_labels || [];
+  const fraudTrend = chartData.fraud_trend || [];
+  const legitTrend = chartData.legit_trend || [];
+  const sparkTotal = chartData.spark_total || [];
+  const sparkRate = chartData.spark_rate || [];
+  const pieData = chartData.pie_data || [0, 0];
+
+  const lineCtx = document.getElementById("fraudLineChart");
+  if (lineCtx) {
+    new Chart(lineCtx, {
+      type: "line",
+      data: {
+        labels: lineLabels,
+        datasets: [
+          {
+            label: "Fraud Cases",
+            data: fraudTrend,
+            borderColor: "#dc2626",
+            backgroundColor: "rgba(220,38,38,0.18)",
+            fill: true,
+            tension: 0.35,
+          },
+          {
+            label: "Legit Cases",
+            data: legitTrend,
+            borderColor: "#2563eb",
+            backgroundColor: "rgba(37,99,235,0.18)",
+            fill: true,
+            tension: 0.35,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "top" } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: "#e5e7eb" } },
+          x: { grid: { color: "#f3f4f6" } },
+        },
+      },
+    });
+  }
+
+  const pieCtx = document.getElementById("fraudPieChart");
+  if (pieCtx) {
+    new Chart(pieCtx, {
+      type: "doughnut",
+      data: {
+        labels: ["Fraud", "Legit"],
+        datasets: [{ data: pieData, backgroundColor: ["#dc2626", "#2563eb"] }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "bottom" } },
+      },
+    });
+  }
+
+  const sparkConfigs = [
+    { id: "sparkTotal", values: sparkTotal, color: "#2563eb" },
+    { id: "sparkFraud", values: fraudTrend, color: "#dc2626" },
+    { id: "sparkSafe", values: legitTrend, color: "#16a34a" },
+    { id: "sparkRate", values: sparkRate, color: "#0f172a" },
+  ];
+
+  sparkConfigs.forEach(function (config) {
+    const ctx = document.getElementById(config.id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: lineLabels,
+        datasets: [
+          {
+            data: config.values,
+            borderColor: config.color,
+            fill: false,
+            tension: 0.35,
+            pointRadius: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { x: { display: false }, y: { display: false } },
+        elements: { line: { borderWidth: 2 } },
+      },
+    });
+  });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  const dashboardDataEl = document.getElementById("dashboard-data");
+  const chartData = dashboardDataEl
+    ? JSON.parse(dashboardDataEl.dataset.payload || "{}")
+    : {};
+
+  const lineLabels = chartData.line_labels || [];
+  const fraudTrend = chartData.fraud_trend || [];
+  const legitTrend = chartData.legit_trend || [];
+
+  // ================= FRAUD TIME CHART =================
+  const fraudTimeCtx = document.getElementById('fraudTimeChart');
+  if (fraudTimeCtx) {
+    new Chart(fraudTimeCtx, {
+      type: 'line',
+      data: {
+        labels: lineLabels,
+        datasets: [
+          {
+            label: 'Fraud Cases',
+            data: fraudTrend,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239,68,68,0.1)',
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: 'Safe Transactions',
+            data: legitTrend,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.1)',
+            fill: true,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // ================= LOCATION CHART =================
+  const locationCtx = document.getElementById('locationFraudChart');
+  if (locationCtx) {
+    new Chart(locationCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Pune', 'Others'],
+        datasets: [
+          {
+            label: 'Fraud Cases',
+            data: [15, 8, 12, 6, 4, 3],
+            backgroundColor: '#f87171'
+          },
+          {
+            label: 'Total Transactions',
+            data: [120, 95, 110, 80, 60, 45],
+            backgroundColor: '#93c5fd'
+          }
+        ]
+      }
+    });
+  }
+
+  // ================= RISK PIE =================
+  const riskCtx = document.getElementById('riskDistributionChart');
+  if (riskCtx) {
+    new Chart(riskCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+        datasets: [{
+          data: [65, 25, 10],
+          backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+        }]
+      }
+    });
+  }
+
+  // ================= PATTERN CHART =================
+  const patternCtx = document.getElementById('patternChart');
+  if (patternCtx) {
+    new Chart(patternCtx, {
+      type: 'radar',
+      data: {
+        labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+        datasets: [
+          {
+            label: 'Normal',
+            data: [20, 15, 45, 60, 55, 35],
+            borderColor: '#10b981'
+          },
+          {
+            label: 'Fraud',
+            data: [5, 8, 3, 2, 4, 12],
+            borderColor: '#ef4444'
+          }
+        ]
+      }
+    });
+  }
+
+});
+</script>
+
+{% endblock %}

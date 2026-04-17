@@ -1,0 +1,13 @@
+{
+  "feature_names": [
+    "Amount",
+    "is_night",
+    "is_high",
+    "new_device",
+    "location_change"
+  ],
+  "models": [
+    "Random Forest",
+    "Logistic Regression"
+  ]
+}

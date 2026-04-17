@@ -1,0 +1,12 @@
+{
+  "feature_names": [
+    "Amount",
+    "hour"
+  ],
+  "cluster_labels": {
+    "0": "Budget / low activity",
+    "1": "Everyday spending",
+    "3": "Active / higher value",
+    "2": "Premium / large ticket"
+  }
+}
